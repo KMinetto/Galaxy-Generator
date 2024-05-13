@@ -36,14 +36,27 @@ scene.add(camera);
  * Galaxy
  */
 const galaxyParameters = {
-    count: 1000,
-    size: 0.02,
+    count: 100000,
+    size: 0.01,
 };
 
+let particlesGeometry = null;
+let particlesMaterial = null
+let particles = null;
 
 const generateGalaxy = () => {
-    const particlesGeometry = new THREE.BufferGeometry();
-    const particlesMaterial = new THREE.PointsMaterial({
+
+    /**
+     * Destroy old Galaxy
+     */
+    if (particles !== null) {
+        particlesGeometry.dispose();
+        particlesMaterial.dispose();
+        scene.remove(particles);
+    }
+
+    particlesGeometry = new THREE.BufferGeometry();
+    particlesMaterial = new THREE.PointsMaterial({
         size: galaxyParameters.size,
         sizeAttenuation: true,
         depthWrite: true,
@@ -61,11 +74,32 @@ const generateGalaxy = () => {
 
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    particles = new THREE.Points(particlesGeometry, particlesMaterial);
     scene.add(particles);
 };
 
 generateGalaxy();
+
+/**
+ * Tweaks
+ */
+const galaxyGUI = gui.addFolder("Taille");
+
+galaxyGUI.add(galaxyParameters, 'count')
+    .min(100)
+    .max(1000000)
+    .step(100)
+    .onFinishChange(generateGalaxy)
+    .name("Nombre d'étoile")
+;
+
+galaxyGUI.add(galaxyParameters, 'size')
+    .min(0.01)
+    .max(0.1)
+    .step(0.01)
+    .onFinishChange(generateGalaxy)
+    .name("Taille Galaxy")
+;
 
 window.addEventListener('resize', () =>
 {
