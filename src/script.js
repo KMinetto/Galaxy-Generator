@@ -33,13 +33,39 @@ camera.position.z = 3;
 scene.add(camera);
 
 /**
- * Test cube
+ * Galaxy
  */
-const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial()
-);
-scene.add(cube);
+const galaxyParameters = {
+    count: 1000,
+    size: 0.02,
+};
+
+
+const generateGalaxy = () => {
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particlesMaterial = new THREE.PointsMaterial({
+        size: galaxyParameters.size,
+        sizeAttenuation: true,
+        depthWrite: true,
+        blending: THREE.AdditiveBlending
+    });
+
+    const positions = new Float32Array(galaxyParameters.count * 3);
+
+    for (let i = 0; i < galaxyParameters.count; i++) {
+        const i3 = i * 3;
+        positions[i3 + 0] = (Math.random() - 0.5) * 3;
+        positions[i3 + 1] = (Math.random() - 0.5) * 3;
+        positions[i3 + 2] = (Math.random() - 0.5) * 3;
+    }
+
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particles);
+};
+
+generateGalaxy();
 
 window.addEventListener('resize', () =>
 {
