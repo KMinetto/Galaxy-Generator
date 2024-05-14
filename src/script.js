@@ -38,6 +38,11 @@ scene.add(camera);
 const galaxyParameters = {
     count: 100000,
     size: 0.01,
+    radius: 5,
+    branches: 3, // %3  => 0, 1, 2, 0, 1, 2
+    spin: 1,
+    randomness: 0.2,
+    randomnessPower: 3
 };
 
 let particlesGeometry = null;
@@ -67,9 +72,18 @@ const generateGalaxy = () => {
 
     for (let i = 0; i < galaxyParameters.count; i++) {
         const i3 = i * 3;
-        positions[i3 + 0] = (Math.random() - 0.5) * 3;
-        positions[i3 + 1] = (Math.random() - 0.5) * 3;
-        positions[i3 + 2] = (Math.random() - 0.5) * 3;
+
+        const radius = Math.random() * galaxyParameters.radius;
+        const spinAngle = radius * galaxyParameters.spin;
+        const branchesAngle =  (i % galaxyParameters.branches) / galaxyParameters.branches * (Math.PI * 2); // (i % galaxyParameters.branches) / galaxyParameters.branches = 1 * 2 PI
+
+        const randomX = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
+        const randomY = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
+        const randomZ = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
+
+        positions[i3 + 0] = Math.sin(branchesAngle + spinAngle) * radius + randomX;
+        positions[i3 + 1] = randomY;
+        positions[i3 + 2] = Math.cos(branchesAngle + spinAngle) * radius + randomZ;
     }
 
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -98,7 +112,47 @@ galaxyGUI.add(galaxyParameters, 'size')
     .max(0.1)
     .step(0.01)
     .onFinishChange(generateGalaxy)
-    .name("Taille Galaxy")
+    .name("Taille Etoiles")
+;
+
+galaxyGUI.add(galaxyParameters, 'radius')
+    .min(0.01)
+    .max(20)
+    .step(0.01)
+    .onFinishChange(generateGalaxy)
+    .name("Rayon Galaxy")
+;
+
+galaxyGUI.add(galaxyParameters, 'branches')
+    .min(3)
+    .max(20)
+    .step(1)
+    .onFinishChange(generateGalaxy)
+    .name("Branches Galaxy")
+;
+
+galaxyGUI.add(galaxyParameters, 'spin')
+    .min(-5)
+    .max(5)
+    .step(0.001)
+    .onFinishChange(generateGalaxy)
+    .name("Rotation Galaxy")
+;
+
+galaxyGUI.add(galaxyParameters, 'randomness')
+    .min(-2)
+    .max(2)
+    .step(0.001)
+    .onFinishChange(generateGalaxy)
+    .name("Aléatoire Galaxy")
+;
+
+galaxyGUI.add(galaxyParameters, 'randomnessPower')
+    .min(1)
+    .max(10)
+    .step(0.001)
+    .onFinishChange(generateGalaxy)
+    .name("Aléatoire Puissance Galaxy")
 ;
 
 window.addEventListener('resize', () =>
