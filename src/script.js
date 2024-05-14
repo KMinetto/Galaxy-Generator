@@ -42,7 +42,9 @@ const galaxyParameters = {
     branches: 3, // %3  => 0, 1, 2, 0, 1, 2
     spin: 1,
     randomness: 0.2,
-    randomnessPower: 3
+    randomnessPower: 3,
+    insideColor: "#FF6030",
+    outsideColor: "#1B3984"
 };
 
 let particlesGeometry = null;
@@ -60,33 +62,48 @@ const generateGalaxy = () => {
         scene.remove(particles);
     }
 
+    const insideColor = new THREE.Color(galaxyParameters.insideColor);
+    const outsideColor = new THREE.Color(galaxyParameters.outsideColor);
+
     particlesGeometry = new THREE.BufferGeometry();
     particlesMaterial = new THREE.PointsMaterial({
         size: galaxyParameters.size,
         sizeAttenuation: true,
         depthWrite: true,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        vertexColors: true
     });
 
     const positions = new Float32Array(galaxyParameters.count * 3);
+    const colors = new Float32Array(galaxyParameters.count * 3);
 
     for (let i = 0; i < galaxyParameters.count; i++) {
         const i3 = i * 3;
 
+        // Position
         const radius = Math.random() * galaxyParameters.radius;
         const spinAngle = radius * galaxyParameters.spin;
         const branchesAngle =  (i % galaxyParameters.branches) / galaxyParameters.branches * (Math.PI * 2); // (i % galaxyParameters.branches) / galaxyParameters.branches = 1 * 2 PI
 
-        const randomX = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
-        const randomY = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
-        const randomZ = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) * galaxyParameters.randomness;
+        const randomX = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1);
+        const randomY = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1);
+        const randomZ = Math.pow(Math.random(), galaxyParameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1);
 
         positions[i3 + 0] = Math.sin(branchesAngle + spinAngle) * radius + randomX;
         positions[i3 + 1] = randomY;
         positions[i3 + 2] = Math.cos(branchesAngle + spinAngle) * radius + randomZ;
+
+        // Color
+        const mixedColor = insideColor.clone();
+        mixedColor.lerp(outsideColor, radius / galaxyParameters.radius);
+
+        colors[i3 + 0] = mixedColor.r;
+        colors[i3 + 1] = mixedColor.g;
+        colors[i3 + 2] = mixedColor.b;
     }
 
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     particles = new THREE.Points(particlesGeometry, particlesMaterial);
     scene.add(particles);
@@ -155,6 +172,14 @@ galaxyGUI.add(galaxyParameters, 'randomnessPower')
     .name("Aléatoire Puissance Galaxy")
 ;
 
+galaxyGUI.addColor(galaxyParameters, "insideColor")
+    .onChange(generateGalaxy)
+;
+
+galaxyGUI.addColor(galaxyParameters, "outsideColor")
+    .onChange(generateGalaxy)
+;
+
 window.addEventListener('resize', () =>
 {
     // Update sizes
@@ -194,6 +219,9 @@ const tick = () =>
 
     // Update controls
     controls.update();
+
+    // Updates Points
+    particles.rotation.y = elapsedTime * 0.02;
 
     // Render
     renderer.render(scene, camera);
